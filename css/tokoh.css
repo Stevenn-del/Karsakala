@@ -21,9 +21,9 @@
   /* Specified Color Palette */
   --tk-bg-primary: #080808;
   --tk-bg-secondary: #11100F;
-  --tk-gold: #C6A45B;
-  --tk-gold-muted: #927442;
-  --tk-gold-light: #E1CA7A;
+  --tk-gold: #d4af37;
+  --tk-gold-muted: #9e7a2b;
+  --tk-gold-light: #f0d58a;
   
   --tk-burgundy: rgba(83, 24, 34, 0.55);
   --tk-burgundy-solid: #531822;
@@ -180,15 +180,15 @@ body.tokoh-page-body .cinematic-backdrop-scrim {
 }
 
 .tokoh-filter-pill.active {
-  background: var(--tk-gold);
-  border-color: var(--tk-gold-light);
-  color: #080808;
+  background: var(--gold-gradient-metallic, linear-gradient(135deg, #dfbe6a 0%, #c8a245 55%, #ab822b 100%));
+  border-color: #f0d58a;
+  color: #0a0908;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .tokoh-filter-pill.active i {
-  color: #080808;
+  color: #0a0908;
 }
 
 /* ------------------------------------------------------------------------------

@@ -15,30 +15,40 @@
  */
 
 :root {
-  /* 1. Core Specified Design Tokens */
+  /* 1. Core Specified Design Tokens — Antique Royal Gold & Obsidian Curatorial System */
   --color-background: #080808;
   --color-background-soft: #11100e;
-  --color-gold: #c5a44d;
-  --color-gold-light: #e1ca7a;
+  --color-gold: #d4af37;
+  --color-gold-light: #f0d58a;
+  --color-gold-dark: #9e7a2b;
   --color-red: #741d2b;
-  --color-text: #f4efe4;
-  --color-text-muted: #c2b9a7;
-  --glass-black: rgba(8, 8, 8, 0.72);
-  --glass-black-soft: rgba(8, 8, 8, 0.55);
-  --gold-border: rgba(197, 164, 77, 0.28);
+  --color-text: #f5f0e6;
+  --color-text-muted: #c4baa8;
+  --glass-black: rgba(10, 9, 8, 0.78);
+  --glass-black-soft: rgba(10, 9, 8, 0.58);
+  --gold-border: rgba(212, 175, 55, 0.28);
+  --gold-border-subtle: rgba(212, 175, 55, 0.18);
+  --gold-border-strong: rgba(212, 175, 55, 0.52);
   --red-overlay: rgba(116, 29, 43, 0.16);
+
+  /* Curated Royal Metallic Gradients & Luminous Glass Tokens */
+  --gold-gradient-metallic: linear-gradient(135deg, #dfbe6a 0%, #c8a245 55%, #ab822b 100%);
+  --gold-gradient-hover: linear-gradient(135deg, #fae29c 0%, #dfbe6a 55%, #bd9233 100%);
+  --gold-gradient-text: linear-gradient(135deg, #f5e4ab 0%, #d4af37 50%, #b88d2d 100%);
+  --glass-gradient-active: linear-gradient(135deg, rgba(212, 175, 55, 0.22) 0%, rgba(116, 29, 43, 0.16) 100%);
+  --glass-gradient-subtle: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(14, 13, 11, 0.75) 100%);
 
   /* 2. Backward-Compatibility Aliases (Mapping Old 5-Color System to New Theme) */
   --color-deep-brown: #11100e;
   --color-warm-brown: #161513;
-  --color-terracotta: #c5a44d;
-  --color-sand: #c2b9a7;
-  --color-cream: #f4efe4;
+  --color-terracotta: #d4af37;
+  --color-sand: #c4baa8;
+  --color-cream: #f5f0e6;
 
   /* 3. Semantic Color Mappings */
   --kp-bg-main: #080808;
   --kp-bg-cream: #11100e;
-  --kp-bg-sand: rgba(197, 164, 77, 0.12);
+  --kp-bg-sand: rgba(212, 175, 55, 0.12);
   --kp-bg-dark: #080808;
   --kp-bg-dark-alt: #050505;
   --kp-bg-warm-brown: #161513;
@@ -46,30 +56,30 @@
   
   /* 4. Atmospheric Curatorial Surfaces (Semi-transparent Black + Fine Gold) */
   --kp-surface-ground: #080808;
-  --kp-surface-elevated: rgba(17, 16, 14, 0.85);
-  --kp-surface-card: rgba(17, 16, 14, 0.88);
-  --kp-surface-card-hover: rgba(24, 22, 19, 0.94);
-  --kp-surface-glass: rgba(8, 8, 8, 0.72);
-  --kp-surface-input: rgba(14, 13, 11, 0.85);
+  --kp-surface-elevated: rgba(17, 16, 14, 0.88);
+  --kp-surface-card: rgba(17, 16, 14, 0.90);
+  --kp-surface-card-hover: rgba(24, 22, 19, 0.96);
+  --kp-surface-glass: rgba(10, 9, 8, 0.78);
+  --kp-surface-input: rgba(14, 13, 11, 0.88);
   
   /* 5. Text Tokens */
-  --kp-text-primary: #f4efe4;
-  --kp-text-secondary: #c2b9a7;
+  --kp-text-primary: #f5f0e6;
+  --kp-text-secondary: #c4baa8;
   --kp-text-muted: #8e8779;
   
-  --kp-text-on-dark: #f4efe4;
-  --kp-text-on-dark-dim: #c2b9a7;
+  --kp-text-on-dark: #f5f0e6;
+  --kp-text-on-dark-dim: #c4baa8;
   --kp-text-on-dark-muted: #8e8779;
   
   /* 6. Accents & Borders */
-  --kp-accent: #c5a44d;
-  --kp-accent-hover: #e1ca7a;
-  --kp-border-sand: rgba(197, 164, 77, 0.28);
-  --kp-border-warm: rgba(197, 164, 77, 0.22);
-  --kp-border-dark: rgba(197, 164, 77, 0.15);
-  --kp-border-subtle: rgba(197, 164, 77, 0.18);
-  --kp-border-medium: rgba(197, 164, 77, 0.32);
-  --kp-border-focus: rgba(225, 202, 122, 0.65);
+  --kp-accent: #d4af37;
+  --kp-accent-hover: #f0d58a;
+  --kp-border-sand: rgba(212, 175, 55, 0.28);
+  --kp-border-warm: rgba(212, 175, 55, 0.22);
+  --kp-border-dark: rgba(212, 175, 55, 0.15);
+  --kp-border-subtle: rgba(212, 175, 55, 0.18);
+  --kp-border-medium: rgba(212, 175, 55, 0.35);
+  --kp-border-focus: rgba(240, 213, 138, 0.75);
   
   /* 7. Typography Tokens — Mandatory 3-Font System */
   --kp-font-serif: 'Inria Serif', Georgia, serif;

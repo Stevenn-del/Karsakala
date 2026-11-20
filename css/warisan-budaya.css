@@ -21,18 +21,18 @@
   --color-deep-brown: #080808;
   --color-warm-brown: #11100e;
   --color-terracotta: #741d2b;
-  --color-sand: #c5a44d;
-  --color-cream: #f4efe4;
+  --color-sand: #d4af37;
+  --color-cream: #f5f0e6;
 
   /* Reusable Semantic Tokens */
   --wb-deep-brown: #080808;
   --wb-warm-brown: #1a1815;
   --wb-terracotta: #741d2b;
-  --wb-sand: #c5a44d;
-  --wb-gold: #c5a44d;
-  --wb-gold-light: #e1ca7a;
-  --wb-cream: #f4efe4;
-  --wb-text-muted: #c2b9a7;
+  --wb-sand: #d4af37;
+  --wb-gold: #d4af37;
+  --wb-gold-light: #f0d58a;
+  --wb-cream: #f5f0e6;
+  --wb-text-muted: #c4baa8;
 
   --wb-bg-canvas: #080808;
   --wb-bg-placard: rgba(12, 11, 9, 0.94);
@@ -589,11 +589,11 @@ body.warisan-page-body {
 }
 
 .warisan-filter-pill.active {
-  background: var(--color-gold, #c5a44d);
-  border-color: var(--color-gold-light, #e1ca7a);
-  color: #080808;
+  background: var(--gold-gradient-metallic, linear-gradient(135deg, #dfbe6a 0%, #c8a245 55%, #ab822b 100%));
+  border-color: #f0d58a;
+  color: #0a0908;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .warisan-gallery-heading-row {
