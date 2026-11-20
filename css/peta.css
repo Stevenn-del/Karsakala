@@ -282,14 +282,14 @@ body.peta-page {
 /* Map Viewport */
 .map-wrap {
   position: relative;
-  height: 600px;
-  background: #2D1408;
+  height: 620px;
+  background: #a5bfdd;
 }
 
 #history-map {
   width: 100%;
   height: 100%;
-  background: #2A1208;
+  background: #a5bfdd;
 }
 
 .leaflet-container {
@@ -1228,4 +1228,51 @@ body.peta-page {
   .history-modal {
     transition: none !important;
   }
+}
+
+
+/* Map Toolbar Actions */
+.map-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.fullscreen-toggle-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Fullscreen Map Mode */
+.map-panel:fullscreen,
+.map-panel:-webkit-full-screen,
+.map-panel.is-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: none !important;
+}
+
+.map-panel:fullscreen .map-wrap,
+.map-panel:-webkit-full-screen .map-wrap,
+.map-panel.is-fullscreen .map-wrap {
+  height: calc(100vh - 64px) !important;
+  flex: 1 1 auto !important;
+}
+
+.map-panel:fullscreen #history-map,
+.map-panel:-webkit-full-screen #history-map,
+.map-panel.is-fullscreen #history-map {
+  width: 100% !important;
+  height: 100% !important;
 }

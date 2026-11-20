@@ -110,10 +110,17 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
             <input id="region-search" type="search" placeholder="Cari kabupaten atau kota..." autocomplete="off" aria-label="Cari kabupaten atau kota di Jawa Tengah">
           </label>
-          <button class="reset-button" id="reset-map" type="button" aria-label="Reset tampilan peta">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"></path><path d="M3 3v5h5"></path></svg>
-            <span>Reset Peta</span>
-          </button>
+          <div class="map-toolbar-actions">
+            <button class="reset-button fullscreen-toggle-btn" id="fullscreen-map" type="button" aria-label="Tampilkan Peta Layar Penuh" title="Layar Penuh Peta">
+              <svg class="icon-expand" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <svg class="icon-compress" viewBox="0 0 24 24" aria-hidden="true" style="display:none;"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span class="btn-text">Layar Penuh</span>
+            </button>
+            <button class="reset-button" id="reset-map" type="button" aria-label="Reset tampilan peta">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"></path><path d="M3 3v5h5"></path></svg>
+              <span>Reset Peta</span>
+            </button>
+          </div>
         </div>
 
         <div class="map-wrap">

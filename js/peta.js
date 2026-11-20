@@ -927,16 +927,28 @@ const landmarkPins = [
 ];
 
 
-// Inisialisasi Peta Leaflet
+// Batas Geografis Pembatasan Navigasi Jawa Tengah (mencegah navigasi keluar wilayah tanpa menimbulkan celah ubin kosong)
+const CENTRAL_JAVA_BOUNDS = L.latLngBounds(
+  [-9.20, 106.80], // Barat Daya: Samudra Hindia & penyangga batas barat
+  [-4.80, 113.30]  // Timur Laut: Laut Jawa utara Karimunjawa & penyangga batas timur
+);
+
+// Inisialisasi Peta Leaflet - Tampilan Penuh Tanpa Gap Kosong
 const map = L.map("history-map", {
   zoomControl: false,
   scrollWheelZoom: true,
-  zoomSnap: 0.5
-}).setView([-7.35, 110.15], 7.5);
+  zoomSnap: 0.5,
+  minZoom: 6.8,
+  maxZoom: 14,
+  maxBounds: CENTRAL_JAVA_BOUNDS,
+  maxBoundsViscosity: 0.85
+}).setView([-7.25, 110.15], 7.5);
 
+// Layer ubin OpenStreetMap mencakup seluruh viewport tanpa batas terpotong (bebas gap)
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 18,
-  keepBuffer: 3,
+  minZoom: 6.8,
+  maxZoom: 14,
+  keepBuffer: 4,
   updateWhenIdle: true,
   updateWhenZooming: false,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> kontributor | Data Geospasial Jawa Tengah'
@@ -1328,7 +1340,7 @@ document.getElementById("reset-map").addEventListener("click", () => {
       <div class="empty-hint"><span></span> 35 kabupaten &amp; kota menanti untuk dijelajahi</div>
     </div>`;
   if (mapBounds.isValid()) map.fitBounds(mapBounds, { padding: [24, 24], animate: true });
-  else map.setView([-7.35, 110.15], 7.5, { animate: true });
+  else map.setView([-7.25, 110.15], 7.5, { animate: true });
 
   // On mobile devices, smoothly scroll back to the map if user was reading the card below
   if (window.innerWidth <= 992) {
@@ -1502,3 +1514,84 @@ if (typeof fetchWilayahFn === 'function') {
     console.warn('[Peta] Menggunakan dataset fallback lokal:', err);
   });
 }
+
+
+// Pengontrol Layar Penuh (Fullscreen) untuk Panel Peta
+const fullscreenBtn = document.getElementById("fullscreen-map");
+const mapPanelEl = document.querySelector(".map-panel");
+
+function isMapFullscreen() {
+  return document.fullscreenElement === mapPanelEl || 
+         document.webkitFullscreenElement === mapPanelEl || 
+         (mapPanelEl && mapPanelEl.classList.contains("is-fullscreen"));
+}
+
+function updateFullscreenUI(active) {
+  if (!fullscreenBtn) return;
+  const iconExpand = fullscreenBtn.querySelector(".icon-expand");
+  const iconCompress = fullscreenBtn.querySelector(".icon-compress");
+  const btnText = fullscreenBtn.querySelector(".btn-text");
+  
+  if (iconExpand) iconExpand.style.display = active ? "none" : "";
+  if (iconCompress) iconCompress.style.display = active ? "" : "none";
+  if (btnText) btnText.textContent = active ? "Kecilkan" : "Layar Penuh";
+  fullscreenBtn.setAttribute("aria-label", active ? "Keluar dari Layar Penuh" : "Tampilkan Peta Layar Penuh");
+}
+
+function toggleMapFullscreen() {
+  if (!mapPanelEl) return;
+  const currentlyActive = isMapFullscreen();
+
+  if (!currentlyActive) {
+    if (mapPanelEl.requestFullscreen) {
+      mapPanelEl.requestFullscreen().catch(() => {
+        mapPanelEl.classList.add("is-fullscreen");
+        updateFullscreenUI(true);
+      });
+    } else if (mapPanelEl.webkitRequestFullscreen) {
+      mapPanelEl.webkitRequestFullscreen();
+    } else {
+      mapPanelEl.classList.add("is-fullscreen");
+      updateFullscreenUI(true);
+    }
+  } else {
+    if (document.exitFullscreen && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
+      document.webkitExitFullscreen();
+    }
+    mapPanelEl.classList.remove("is-fullscreen");
+    updateFullscreenUI(false);
+  }
+
+  // Refresh ukuran peta agar ubin merender sempurna memenuhi layar
+  setTimeout(() => {
+    map.invalidateSize();
+    if (activeRegion) {
+      focusRegionOnMap(activeRegion);
+    } else if (mapBounds.isValid()) {
+      map.fitBounds(mapBounds, { padding: [30, 30] });
+    }
+  }, 120);
+}
+
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener("click", toggleMapFullscreen);
+}
+
+function handleFullscreenChange() {
+  const active = Boolean(document.fullscreenElement === mapPanelEl || document.webkitFullscreenElement === mapPanelEl);
+  if (mapPanelEl) {
+    if (active) mapPanelEl.classList.add("is-fullscreen");
+    else mapPanelEl.classList.remove("is-fullscreen");
+  }
+  updateFullscreenUI(active);
+  setTimeout(() => {
+    map.invalidateSize();
+    if (activeRegion) focusRegionOnMap(activeRegion);
+    else if (mapBounds.isValid()) map.fitBounds(mapBounds, { padding: [30, 30] });
+  }, 150);
+}
+
+document.addEventListener("fullscreenchange", handleFullscreenChange);
+document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
