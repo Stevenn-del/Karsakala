@@ -820,6 +820,155 @@
   // ==========================================================================
   // 4. WEBGL2 GENUINE 3D LAMP-LIT SHADOW THEATER RENDERER
   // ==========================================================================
+    // ==========================================================================
+  // ADAPTIVE HARDWARE & DEVICE PERFORMANCE ADAPTER
+  // ==========================================================================
+  class DevicePerformanceAdapter {
+    constructor() {
+      this.isMobile = this.detectMobile();
+      this.tier = this.detectInitialTier();
+      this.settings = this.getTierSettings(this.tier);
+      this.frameCount = 0;
+      this.lastFpsCheckTime = performance.now();
+      this.stableHighFpsCount = 0;
+      this.lowFpsCount = 0;
+      this.listeners = [];
+      this.isLocked = false;
+    }
+
+    detectMobile() {
+      const ua = navigator.userAgent || '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Tablet|Silk/i.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+      const minDim = Math.min(window.screen?.width || window.innerWidth || 1200, window.screen?.height || window.innerHeight || 800);
+      return isMobileUA || (isTouch && minDim <= 1024);
+    }
+
+    detectInitialTier() {
+      const cores = navigator.hardwareConcurrency || 4;
+      const mem = navigator.deviceMemory || 4;
+      const isMobile = this.isMobile;
+
+      // Low tier: Mobile phones, tablets, or budget machines with <= 4 cores or <= 3GB memory
+      if (isMobile || cores <= 4 || mem <= 3) {
+        return 'low';
+      }
+      // Medium tier: Standard laptops / desktops (6-8 cores, standard RAM)
+      if (cores <= 8 || mem <= 6) {
+        return 'medium';
+      }
+      // High tier: High-end workstations / gaming laptops (ASUS TUF, discrete GPUs)
+      return 'high';
+    }
+
+    getTierSettings(tier) {
+      switch (tier) {
+        case 'low':
+          return {
+            tier: 'low',
+            renderScale: 0.65,
+            maxResolution: 960,
+            enableBloom: false,
+            shadowPasses: 1,
+            fastShaderMode: 1,
+            handModelComplexity: 0, // Lite MediaPipe model (~3x faster inference)
+            handThrottleMs: 48,      // ~20-22 FPS detection throttle (smooth for wayang puppet control)
+            camWidth: 640,
+            camHeight: 480,
+            camFps: 30,
+          };
+        case 'medium':
+          return {
+            tier: 'medium',
+            renderScale: 0.82,
+            maxResolution: 1280,
+            enableBloom: true,
+            shadowPasses: 1,
+            fastShaderMode: 0,
+            handModelComplexity: 0,
+            handThrottleMs: 38,      // ~25-26 FPS detection throttle
+            camWidth: 640,
+            camHeight: 480,
+            camFps: 30,
+          };
+        case 'high':
+        default:
+          return {
+            tier: 'high',
+            renderScale: 1.0,
+            maxResolution: 1600,
+            enableBloom: true,
+            shadowPasses: 2,
+            fastShaderMode: 0,
+            handModelComplexity: 1, // Full MediaPipe model
+            handThrottleMs: 32,      // ~30 FPS detection throttle
+            camWidth: 1280,
+            camHeight: 720,
+            camFps: 30,
+          };
+      }
+    }
+
+    setTier(newTier) {
+      if (this.tier === newTier) return;
+      const oldTier = this.tier;
+      this.tier = newTier;
+      this.settings = this.getTierSettings(newTier);
+      console.log(`[Wayang Motion] Adaptive tier changed: ${oldTier} -> ${newTier}`, this.settings);
+      this.notifyListeners(newTier, this.settings);
+    }
+
+    onTierChange(callback) {
+      if (typeof callback === 'function') {
+        this.listeners.push(callback);
+      }
+    }
+
+    notifyListeners(tier, settings) {
+      this.listeners.forEach((fn) => {
+        try { fn(tier, settings); } catch (e) { console.debug('Tier change listener error:', e); }
+      });
+    }
+
+    recordFrame(nowMs) {
+      this.frameCount++;
+      const elapsed = nowMs - this.lastFpsCheckTime;
+      if (elapsed >= 2500) {
+        const currentFps = (this.frameCount * 1000) / elapsed;
+        this.frameCount = 0;
+        this.lastFpsCheckTime = nowMs;
+
+        // Auto-adapt down if framerate drops (< 26 FPS for consecutive windows)
+        if (currentFps < 26) {
+          this.lowFpsCount++;
+          this.stableHighFpsCount = 0;
+          if (this.lowFpsCount >= 2 && !this.isLocked) {
+            if (this.tier === 'high') {
+              this.setTier('medium');
+              this.lowFpsCount = 0;
+            } else if (this.tier === 'medium') {
+              this.setTier('low');
+              this.lowFpsCount = 0;
+            }
+          }
+        } else if (currentFps >= 55 && !this.isMobile && !this.isLocked) {
+          this.lowFpsCount = 0;
+          this.stableHighFpsCount++;
+          if (this.stableHighFpsCount >= 4 && this.tier === 'medium') {
+            this.setTier('high');
+            this.stableHighFpsCount = 0;
+          }
+        } else {
+          this.lowFpsCount = 0;
+          this.stableHighFpsCount = 0;
+        }
+      }
+    }
+  }
+
+  const performanceAdapter = new DevicePerformanceAdapter();
+
   const STAGE_W = 1920;
   const STAGE_H = 1080;
 
@@ -866,6 +1015,7 @@ uniform vec3 uM1;
 uniform vec2 uTilt;
 uniform float uBump;
 uniform float uAlpha;
+uniform int uFastMode;
 ${LIGHTING}
 out vec4 outColor;
 
@@ -879,12 +1029,17 @@ void main() {
   if (t.a < 0.003) discard;
   vec3 alb = t.rgb / t.a;
 
-  vec2 e = uTexel * 1.35;
-  float hl = height(vUv - vec2(e.x, 0.0));
-  float hr = height(vUv + vec2(e.x, 0.0));
-  float hu = height(vUv - vec2(0.0, e.y));
-  float hd = height(vUv + vec2(0.0, e.y));
-  vec3 nt = normalize(vec3((hl - hr) * uBump, (hu - hd) * uBump, 1.0));
+  vec3 nt;
+  if (uFastMode == 1) {
+    nt = vec3(0.0, 0.0, 1.0);
+  } else {
+    vec2 e = uTexel * 1.35;
+    float hl = height(vUv - vec2(e.x, 0.0));
+    float hr = height(vUv + vec2(e.x, 0.0));
+    float hu = height(vUv - vec2(0.0, e.y));
+    float hd = height(vUv + vec2(0.0, e.y));
+    nt = normalize(vec3((hl - hr) * uBump, (hu - hd) * uBump, 1.0));
+  }
 
   vec2 c0 = vec2(uM0.x, uM1.x);
   vec2 c1 = vec2(uM0.y, uM1.y);
@@ -1185,6 +1340,21 @@ void main() {
       this.tex = {};
       this.rt = {};
       this.size = [0, 0];
+      this.fastMode = false;
+      this.enableBloom = true;
+      this.shadowPasses = 2;
+      this.renderScale = 1.0;
+      this.maxResolution = 1600;
+      this.setQuality(performanceAdapter.settings);
+    }
+
+    setQuality(settings) {
+      if (!settings) return;
+      if (typeof settings.fastShaderMode !== 'undefined') this.fastMode = !!settings.fastShaderMode;
+      if (typeof settings.enableBloom !== 'undefined') this.enableBloom = !!settings.enableBloom;
+      if (typeof settings.shadowPasses !== 'undefined') this.shadowPasses = settings.shadowPasses;
+      if (typeof settings.renderScale !== 'undefined') this.renderScale = settings.renderScale;
+      if (typeof settings.maxResolution !== 'undefined') this.maxResolution = settings.maxResolution;
     }
 
     async loadTexture(key, url) {
@@ -1197,6 +1367,7 @@ void main() {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
       gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      img.src = ''; // Detach DOM Image immediately to reclaim CPU heap memory
       gl.generateMipmap(gl.TEXTURE_2D);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -1223,25 +1394,38 @@ void main() {
     }
 
     resize(w, h) {
-      if (w === this.size[0] && h === this.size[1]) return;
+      // Calculate scaled rendering dimensions based on adaptive performance tier
+      const scale = this.renderScale || 1.0;
+      const maxW = this.maxResolution || 1600;
+      let rw = Math.round(w * scale);
+      let rh = Math.round(h * scale);
+      if (rw > maxW) {
+        const factor = maxW / rw;
+        rw = maxW;
+        rh = Math.round(rh * factor);
+      }
+      rw = Math.max(320, rw);
+      rh = Math.max(220, rh);
+
+      if (rw === this.size[0] && rh === this.size[1]) return;
       const gl = this.gl;
       for (const rt of Object.values(this.rt)) {
-        gl.deleteTexture(rt.tex);
-        gl.deleteFramebuffer(rt.fb);
+        if (rt && rt.tex) gl.deleteTexture(rt.tex);
+        if (rt && rt.fb) gl.deleteFramebuffer(rt.fb);
       }
-      this.canvas.width = w;
-      this.canvas.height = h;
-      const hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1);
-      const qw = Math.max(1, w >> 2), qh = Math.max(1, h >> 2);
+      this.canvas.width = rw;
+      this.canvas.height = rh;
+      const hw = Math.max(1, rw >> 1), hh = Math.max(1, rh >> 1);
+      const qw = Math.max(1, rw >> 2), qh = Math.max(1, rh >> 2);
       this.rt = {
-        scene: this.makeRT(w, h, this.floatRT),
+        scene: this.makeRT(rw, rh, this.floatRT),
         shadow0: this.makeRT(hw, hh, false),
         shadow1: this.makeRT(hw, hh, false),
         shadowTmp: this.makeRT(hw, hh, false),
-        bloomA: this.makeRT(qw, qh, this.floatRT),
-        bloomB: this.makeRT(qw, qh, this.floatRT),
+        bloomA: this.enableBloom ? this.makeRT(qw, qh, this.floatRT) : null,
+        bloomB: this.enableBloom ? this.makeRT(qw, qh, this.floatRT) : null,
       };
-      this.size = [w, h];
+      this.size = [rw, rh];
     }
 
     bindRT(rt) {
@@ -1300,10 +1484,12 @@ void main() {
       this.bindTex(0, t.tex);
       gl.uniform1i(prog.u('uTex'), 0);
       if (lit) {
+        gl.uniform1i(prog.u('uFastMode'), this.fastMode ? 1 : 0);
         gl.uniform2f(prog.u('uTexel'), 1 / t.w, 1 / t.h);
         gl.uniform2f(prog.u('uTilt'), ...(item.tilt ?? [0, 0]));
         gl.uniform1f(prog.u('uBump'), 5.5);
       } else {
+        gl.uniform1i(prog.u('uFastMode'), 1);
         gl.uniform1f(prog.u('uTint'), 0.22);
       }
       gl.bindVertexArray(this.quadVao);
@@ -1407,7 +1593,7 @@ void main() {
         gl.disable(gl.BLEND);
         const px = layer.shadow.blur * pxPerStage;
         this.blur(target, rt.shadowTmp, px);
-        if (px > 6) this.blur(target, rt.shadowTmp, px * 0.5);
+        if (this.shadowPasses >= 2 && px > 6) this.blur(target, rt.shadowTmp, px * 0.5);
         strengths[i] = layer.shadow.strength;
       });
 
@@ -1433,24 +1619,31 @@ void main() {
       for (const layer of layers) this.drawItems(layer.items, f, [0, 0, 1, 0], true);
       gl.disable(gl.BLEND);
 
-      // 4. Bloom from Blencong Highlights
-      this.bindRT(rt.bloomA);
-      gl.useProgram(p.bright.prog);
-      this.bindTex(0, rt.scene.tex);
-      gl.uniform1i(p.bright.u('uTex'), 0);
-      gl.uniform1f(p.bright.u('uThreshold'), 1.05);
-      this.fullscreen(p.bright);
-      this.blur(rt.bloomA, rt.bloomB, 10);
-      this.blur(rt.bloomA, rt.bloomB, 22);
+      // 4. Bloom from Blencong Highlights (adaptive: only on medium/high tiers)
+      if (this.enableBloom && rt.bloomA && rt.bloomB) {
+        this.bindRT(rt.bloomA);
+        gl.useProgram(p.bright.prog);
+        this.bindTex(0, rt.scene.tex);
+        gl.uniform1i(p.bright.u('uTex'), 0);
+        gl.uniform1f(p.bright.u('uThreshold'), 1.05);
+        this.fullscreen(p.bright);
+        this.blur(rt.bloomA, rt.bloomB, 10);
+        this.blur(rt.bloomA, rt.bloomB, 22);
+      }
 
       // 5. Final Grade, Vignette & Film Grain
       this.bindRT(null);
       gl.useProgram(p.final.prog);
       this.bindTex(0, rt.scene.tex);
-      this.bindTex(1, rt.bloomA.tex);
+      if (this.enableBloom && rt.bloomA) {
+        this.bindTex(1, rt.bloomA.tex);
+        gl.uniform1f(p.final.u('uBloomK'), 0.22);
+      } else {
+        this.bindTex(1, rt.scene.tex);
+        gl.uniform1f(p.final.u('uBloomK'), 0.0);
+      }
       gl.uniform1i(p.final.u('uScene'), 0);
       gl.uniform1i(p.final.u('uBloom'), 1);
-      gl.uniform1f(p.final.u('uBloomK'), 0.22);
       gl.uniform2f(p.final.u('uRes'), W, H);
       gl.uniform1f(p.final.u('uTime'), f.time);
       this.fullscreen(p.final);
@@ -2095,9 +2288,24 @@ void main() {
       this.images[key] = img;
     }
 
+    setQuality(settings) {
+      if (!settings) return;
+      if (typeof settings.renderScale !== 'undefined') this.renderScale = settings.renderScale;
+      if (typeof settings.maxResolution !== 'undefined') this.maxResolution = settings.maxResolution;
+    }
+
     resize(w, h) {
-      this.canvas.width = w;
-      this.canvas.height = h;
+      const scale = this.renderScale || 1.0;
+      const maxW = this.maxResolution || 1600;
+      let rw = Math.round(w * scale);
+      let rh = Math.round(h * scale);
+      if (rw > maxW) {
+        const factor = maxW / rw;
+        rw = maxW;
+        rh = Math.round(rh * factor);
+      }
+      this.canvas.width = Math.max(320, rw);
+      this.canvas.height = Math.max(220, rh);
     }
 
     destroy() {
@@ -3127,11 +3335,33 @@ void main() {
 
   const narrationManager = new CharacterNarrationManager();
 
+  // Helper to dynamically synchronize MediaPipe hand count and complexity
+  function updateMediaPipeHandCount() {
+    if (state.handsInstance) {
+      const needed = Math.min(controller ? controller.puppetCount : 1, 2);
+      try {
+        state.handsInstance.setOptions({
+          maxNumHands: needed,
+          modelComplexity: performanceAdapter.settings.handModelComplexity,
+        });
+      } catch (e) {
+        console.debug('Wayang Motion: updateMediaPipeHandCount error:', e);
+      }
+    }
+  }
+
+  performanceAdapter.onTierChange((tier, settings) => {
+    renderer?.setQuality(settings);
+    resizeStage();
+    updateMediaPipeHandCount();
+  });
+
   // Toggle Duel / Single Mode
   function toggleDuelMode() {
     if (controller.puppetCount === 2) {
       controller.puppetCount = 1;
       state.characterMode = 'single';
+      updateMediaPipeHandCount();
       if (els.btnDuelToggle) {
         els.btnDuelToggle.classList.remove('active');
         els.btnDuelToggle.setAttribute('aria-pressed', 'false');
@@ -3143,6 +3373,7 @@ void main() {
     } else {
       controller.puppetCount = 2;
       state.characterMode = 'duel';
+      updateMediaPipeHandCount();
       if (els.btnDuelToggle) {
         els.btnDuelToggle.classList.add('active');
         els.btnDuelToggle.setAttribute('aria-pressed', 'true');
@@ -3454,10 +3685,24 @@ void main() {
     updateHud();
   }
 
+  let lastModalThrottleTime = 0;
+
   function tick(nowMs) {
     if (document.hidden || !isStageInViewport) {
       rafId = null;
       return;
+    }
+
+    // Record frame timing for adaptive performance monitoring
+    performanceAdapter.recordFrame(nowMs);
+
+    // If character story modal is open, throttle 3D stage rendering to save CPU/GPU for audio narration
+    if (els.charModal && !els.charModal.classList.contains('hidden')) {
+      if (nowMs - lastModalThrottleTime < 66) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+      lastModalThrottleTime = nowMs;
     }
 
     // When inactive (intro screen or stopped session), render once and sleep RAF to save 100% CPU/GPU
@@ -3627,46 +3872,85 @@ void main() {
       throw unsupErr;
     }
 
-    const constraintTiers = [
-      // Tier 1: Ideal 720p 30fps user-facing webcam (phones, tablets, supported webcams)
-      {
-        video: {
-          facingMode: { ideal: 'user' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30, max: 60 },
-        },
-        audio: false,
-      },
-      // Tier 2: 720p generic (for laptops & desktops where webcam driver has no facingMode)
-      {
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30, max: 60 },
-        },
-        audio: false,
-      },
-      // Tier 3: Standard 480p user-facing webcam
+    const isBudgetTier = performanceAdapter.isMobile || performanceAdapter.tier !== 'high';
+    const constraintTiers = isBudgetTier ? [
+      // Low/Medium/Mobile Tier: Standard 480p user-facing webcam at steady 30fps (never 60fps)
       {
         video: {
           facingMode: { ideal: 'user' },
           width: { ideal: 640 },
           height: { ideal: 480 },
-          frameRate: { ideal: 30 },
+          frameRate: { ideal: 30, max: 30 },
         },
         audio: false,
       },
-      // Tier 4: Standard 480p generic
+      // Tier 2: 640x360 widescreen front camera (common on mobile phones)
+      {
+        video: {
+          facingMode: { ideal: 'user' },
+          width: { ideal: 640 },
+          height: { ideal: 360 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: false,
+      },
+      // Tier 3: Standard 480p generic webcam
       {
         video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
-          frameRate: { ideal: 30 },
+          frameRate: { ideal: 30, max: 30 },
         },
         audio: false,
       },
-      // Tier 5: Most permissive fallback (any available video device)
+      // Tier 4: User-facing generic fallback
+      {
+        video: {
+          facingMode: 'user',
+        },
+        audio: false,
+      },
+      // Tier 5: Permissive fallback
+      {
+        video: true,
+        audio: false,
+      },
+    ] : [
+      // High Tier (gaming laptops / desktops): 720p 30fps webcam (max 30fps to avoid device heating)
+      {
+        video: {
+          facingMode: { ideal: 'user' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: false,
+      },
+      {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: false,
+      },
+      {
+        video: {
+          facingMode: { ideal: 'user' },
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: false,
+      },
+      {
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30, max: 30 },
+        },
+        audio: false,
+      },
       {
         video: true,
         audio: false,
@@ -3744,8 +4028,9 @@ void main() {
       if (isSendingFrame) return;
 
       const now = performance.now();
-      // Throttle MediaPipe processing to smooth ~30fps (32ms interval) to maintain high framerate and prevent queue pileup
-      if (now - lastSentTimestamp < 32) return;
+      // Throttle MediaPipe processing using adaptive throttle interval based on device performance tier
+      const throttleInterval = performanceAdapter ? performanceAdapter.settings.handThrottleMs : 32;
+      if (now - lastSentTimestamp < throttleInterval) return;
       lastSentTimestamp = now;
 
       isSendingFrame = true;
@@ -3940,9 +4225,10 @@ void main() {
         const hands = new window.Hands({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`,
         });
+        const neededHands = Math.min(controller ? controller.puppetCount : 1, 2);
         hands.setOptions({
-          maxNumHands: 4,
-          modelComplexity: 1,
+          maxNumHands: neededHands,
+          modelComplexity: performanceAdapter.settings.handModelComplexity,
           minDetectionConfidence: 0.55,
           minTrackingConfidence: 0.5,
         });
