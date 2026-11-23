@@ -241,9 +241,11 @@ body.warisan-page-body {
   background-color: #0d0c0a;
   cursor: pointer;
   transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style;
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
               opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              filter 0.45s ease,
               box-shadow 0.45s ease;
   will-change: transform, opacity;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);

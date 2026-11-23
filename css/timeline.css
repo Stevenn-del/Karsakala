@@ -250,9 +250,11 @@ body.timeline-body {
   height: 390px;
   transform-style: preserve-3d;
   cursor: pointer;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  contain: layout style;
   transition: 
     transform 0.58s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.44s ease,
     opacity 0.44s ease;
   will-change: transform, opacity;
   -webkit-box-reflect: below 2px linear-gradient(to bottom, transparent 65%, rgba(0, 0, 0, 0.35) 100%);

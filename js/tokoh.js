@@ -297,7 +297,6 @@ class TokohEditorialController {
           <div class="spotlight-controls-row">
             <button type="button" class="btn-read-tokoh-primary btn-read-tokoh" data-open-tokoh="${activeFig.id}">
               <span>Pelajari Kisah Lengkap</span>
-              <i class="bi bi-arrow-right" aria-hidden="true"></i>
             </button>
 
             <div class="deck-nav-cluster" aria-label="Navigasi Galeri Tokoh">

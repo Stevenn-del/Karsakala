@@ -1157,7 +1157,11 @@ function addRegionFeature(region, geojson) {
           if (activeRegion !== region.name) featureLayer.setStyle({ fillOpacity: 0.72, weight: 2.2 });
           featureLayer.bringToFront();
         },
-        mouseout: () => applyActiveStyle(),
+        mouseout: () => {
+          if (activeRegion !== region.name) {
+            featureLayer.setStyle(regionStyle(feature.properties.mapRegionName));
+          }
+        },
         click: () => selectRegion(region.name, false, true)
       });
     }
