@@ -391,6 +391,7 @@
     const track = document.getElementById('coverflow-track');
     if (!track) return;
 
+    state._cachedSlabs = null;
     track.innerHTML = '';
 
     HISTORICAL_ERAS_DATA.forEach((item, index) => {
@@ -420,7 +421,7 @@
 
           <!-- Front Cover Face -->
           <div class="slab-cover">
-            <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(coverTitle)}" class="slab-cover-img" width="234" height="390" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async">
+            <img src="${escapeHtml(coverImg)}" alt="${escapeHtml(coverTitle)}" class="slab-cover-img" width="234" height="390" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async" draggable="false">
             <div class="slab-cover-overlay">
               <span class="slab-tag">${escapeHtml(coverTag)}</span>
               <h3 class="slab-title">${escapeHtml(coverTitle)}</h3>
@@ -476,6 +477,7 @@
     const stepper = document.getElementById('milestone-stepper');
     if (!stepper) return;
 
+    state._cachedStepperBtns = null;
     stepper.innerHTML = '';
     HISTORICAL_ERAS_DATA.forEach((item, index) => {
       const btn = document.createElement('button');
@@ -753,72 +755,29 @@
   }
 
   /**
-   * 10. DRAG & TOUCH SUPPORT FOR 3D PERSPECTIVE GALLERY
+   * 10. UNIFIED GESTURE NAVIGATION (TOUCHPAD SWIPE, MOUSE DRAG, TOUCH SWIPE)
    */
   function setupDragAndTouch() {
     const viewport = document.getElementById('coverflow-viewport');
     if (!viewport) return;
-
-    function onMouseMove(e) {
-      if (!state.isDragging) return;
-      state.dragDeltaX = e.clientX - state.dragStartX;
+    if (typeof window.attachCarouselGestures !== 'function') {
+      document.addEventListener('DOMContentLoaded', setupDragAndTouch, { once: true });
+      return;
     }
 
-    function onMouseUp() {
-      if (!state.isDragging) return;
-      state.isDragging = false;
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      const threshold = 50;
-      if (state.dragDeltaX > threshold) {
-        prevPanel();
-      } else if (state.dragDeltaX < -threshold) {
-        nextPanel();
+    window.attachCarouselGestures(viewport, {
+      onNext: nextPanel,
+      onPrev: prevPanel,
+      ignoreTargetSelector: 'button, a, .stage-center-action-wrapper, .gallery-nav-arrow',
+      shouldIgnore: () => {
+        const modal = document.getElementById('timeline-detail-modal');
+        const drawer = document.getElementById('timeline-overview-drawer');
+        return Boolean(
+          (modal && modal.classList.contains('show')) ||
+          (drawer && drawer.classList.contains('open'))
+        );
       }
-      state.dragDeltaX = 0;
-    }
-
-    viewport.addEventListener('mousedown', (e) => {
-      // Ignore clicks on buttons
-      if (e.target.closest('button') || e.target.closest('.stage-center-action-wrapper')) return;
-      state.isDragging = true;
-      state.dragStartX = e.clientX;
-      state.dragDeltaX = 0;
-      window.addEventListener('mousemove', onMouseMove, { passive: true });
-      window.addEventListener('mouseup', onMouseUp);
     });
-
-    // Touch support for phones & tablets
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchDeltaX = 0;
-    let touchDeltaY = 0;
-
-    viewport.addEventListener('touchstart', (e) => {
-      if (e.target.closest('button') || e.target.closest('.stage-center-action-wrapper')) return;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchDeltaX = 0;
-      touchDeltaY = 0;
-    }, { passive: true });
-
-    viewport.addEventListener('touchmove', (e) => {
-      touchDeltaX = e.touches[0].clientX - touchStartX;
-      touchDeltaY = e.touches[0].clientY - touchStartY;
-    }, { passive: true });
-
-    viewport.addEventListener('touchend', () => {
-      const threshold = 40;
-      if (Math.abs(touchDeltaX) > Math.abs(touchDeltaY) && Math.abs(touchDeltaX) > threshold) {
-        if (touchDeltaX > 0) {
-          prevPanel();
-        } else {
-          nextPanel();
-        }
-      }
-      touchDeltaX = 0;
-      touchDeltaY = 0;
-    }, { passive: true });
   }
 
   /**

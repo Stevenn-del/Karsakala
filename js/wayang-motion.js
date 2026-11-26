@@ -3020,11 +3020,19 @@ void main() {
       puppetIndex: 0,
       image: 'assets/images/wayang-motion/wayang-wahyana.webp',
       audioUrl: 'assets/audio/narration-prabu-wahyana.mp3',
+      voiceProfile: {
+        lang: 'id-ID',
+        gender: 'male',
+        characterTone: 'calm-wise-dignified',
+        rate: 0.90,
+        pitch: 0.96,
+        durationSec: 37,
+      },
       intro: 'Prabu Wahyana adalah raja agung yang berwibawa dalam khazanah pewayangan Jawa, memimpin praja dengan ketegasan prinsip, keluhuran budi, dan keberanian membela kebenaran serta kedaulatan rakyatnya.',
       story: 'Dalam lakon wayang kulit purwa Jawa Tengah, figur Prabu Wahyana merepresentasikan kepemimpinan ksatria yang kokoh berdaulat. Ditempa dalam kearifan tradisi pedalangan, ia mengarungi berbagai pergolakan panggung kelir dengan keteguhan hati, menjunjung marwah kerajaan, dan senantiasa mendahulukan ketenteraman kawula alit.',
       personality: 'Berwibawa, bijaksana, tangguh, berani mengambil keputusan sulit, menjunjung tinggi keadilan, setia pada darma kepemimpinan, dan pantang surut dalam menghadapi mara bahaya.',
       moralLesson: 'Kepemimpinan sejati bukanlah tentang kekuasaan mutlak, melainkan pengabdian suci untuk menegakkan keadilan, menjaga martabat negeri, dan melindungi harkat sesama manusia dengan hati yang ikhlas.',
-      narration: 'Namaku Prabu Wahyana, penguasa praja yang menjunjung tinggi keluhuran budi dan keadilan. Dalam panggung kelir kehidupan, kekuasaan adalah amanah luhur untuk mengayomi sesama, bukan untuk meninggikan diri. Kisahku mengajarkan bahwa keberanian berpadu keteguhan prinsip adalah perisai paling sejati dalam menjaga martabat tanah air dan menegakkan darma kebenaran.',
+      narration: 'Salam rahayu. Namaku Prabu Wahyana, raja yang berwibawa sekaligus tokoh utama di atas panggung kelir ini. Dalam tradisi wayang kulit purwa Jawa Tengah, aku memimpin praja dengan kebijaksanaan, keteguhan prinsip, dan keluhuran budi pekerti. Bagiku, kepemimpinan sejati bukanlah tentang kekuasaan mutlak, melainkan pengabdian yang tulus untuk menegakkan keadilan, mengayomi rakyat, serta menjaga kedamaian dan ketenteraman negeri. Lewat kisah di balik layar kelir ini, mari kita rawat martabat bersama dengan hati yang bijak dan ikhlas.',
       sources: 'Serat Pedalangan Wayang Kulit Purwa Jawa Tengah & Tradisi Seni Tutur Nusantara'
     },
     'prabu-brajawisena': {
@@ -3036,11 +3044,19 @@ void main() {
       puppetIndex: 1,
       image: 'assets/images/wayang-motion/wayang-brajawisena.webp',
       audioUrl: 'assets/audio/narration-brajawisena.mp3',
+      voiceProfile: {
+        lang: 'id-ID',
+        gender: 'male',
+        characterTone: 'deep-firm-assertive',
+        rate: 1.02,
+        pitch: 0.78,
+        durationSec: 40,
+      },
       intro: 'Prabu Brajawisena adalah raja ksatria perkasa berwatak gagah dan bertekad baja dari seberang samudra, hadir sebagai lawan tanding tangguh bagi Prabu Wahyana dalam lakon tanding kehormatan praja.',
       story: 'Dalam lakon panggung kelir (tokoh kreasi orisinal bertradisi wayang kulit purwa sabrang), Prabu Brajawisena digambarkan memimpin bala tentara dengan disiplin perang yang tak tergoyahkan. Mahkota prada keemasan, badong sayap ksatria, dan sorot matanya yang tajam melambangkan tekad pantang menyerah sebelum ujian watak dan kebenaran terbukti di hadapan sang Dalang.',
       personality: 'Tegas, pantang gentar, menjunjung tinggi harga diri dan kejujuran laga, berjiwa ksatria sejati yang menghormati keunggulan lawan, serta pantang berkhianat.',
       moralLesson: 'Kekuatan lahiriah dan keberanian tanpa kompromi hanyalah kehampaan bila tidak dibimbing oleh kerendahan hati. Lawan tanding dalam kehidupan hadir bukan semata untuk dihancurkan, melainkan untuk menguji sejauh mana kita mampu menjaga keluhuran budi pekerti di tengah badai perselisihan.',
-      narration: 'Akulah Prabu Brajawisena! Raja ksatria yang pantang surut selangkah jua dalam menuntut kebenaran. Pedang dan gada ksatria tidak pernah diayunkan demi angkara murka, melainkan demi membuktikan keteguhan janji dan kehormatan tanah pusaka. Hadapilah tantanganku dengan keluhuran budi, karena ksatria sejati diuji bukan saat ia menang, melainkan saat ia mampu menghormati lawannya di atas panggung kehidupan!',
+      narration: 'Dengarkanlah! Akulah Prabu Brajawisena, raja kesatria perkasa yang hadir sebagai lawan tanding bagi Prabu Wahyana di atas panggung kelir ini. Perlu engkau ketahui, aku adalah tokoh kreasi orisinal yang terinspirasi dari tradisi wayang kulit sabrang, bukan tokoh sejarah ataupun tokoh pakem pewayangan klasik. Dengan perawakan gagah, sorot mata yang tajam, dan tekad baja yang pantang gentar, aku datang membawa ujian nyata bagi keteguhan kepemimpinan, kewibawaan, dan prinsip moral Prabu Wahyana. Sebab bagi seorang kesatria sejati, kekuatan tanpa kerendahan hati hanyalah kehampaan, dan kehormatan baru terbukti saat kita mampu menjaga kejujuran laga serta menghormati lawan di hadapan sang Dalang!',
       sources: 'Kreasi Orisinal Terinspirasi Tipologi Wayang Sabrang Purwa & Ragam Sungging Tradisi Jawa'
     }
   };
@@ -3104,11 +3120,13 @@ void main() {
       this.speechDurationEst = 28;
       this.speechTimer = null;
 
-      // Detect Indonesian voice if SpeechSynthesis is available
+      // Detect Indonesian male voice if SpeechSynthesis is available
       if ('speechSynthesis' in window) {
         const updateVoices = () => {
           const voices = window.speechSynthesis.getVoices();
-          this.synthVoice = voices.find(v => (v.lang && (v.lang.startsWith('id') || v.lang.includes('ID'))) || (v.name && v.name.toLowerCase().includes('indonesia'))) || null;
+          const isIndonesian = (v) => (v.lang && (v.lang.startsWith('id') || v.lang.includes('ID'))) || (v.name && v.name.toLowerCase().includes('indonesia'));
+          const idVoices = voices.filter(isIndonesian);
+          this.synthVoice = idVoices.find(v => /ardi|andika|male|pria|laki/i.test(v.name || '')) || idVoices[0] || null;
         };
         updateVoices();
         if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -3157,15 +3175,16 @@ void main() {
     play(charId) {
       const char = WAYANG_CHARACTERS[charId];
       if (!char) return;
+      const canonicalId = char.id;
 
       // If resuming paused character
-      if (this.mode === 'paused' && this.activeCharId === charId) {
+      if (this.mode === 'paused' && this.activeCharId === canonicalId) {
         this.resume();
         return;
       }
 
       this.stop();
-      this.activeCharId = charId;
+      this.activeCharId = canonicalId;
       if (els.audioErrorMsg) els.audioErrorMsg.classList.add('hidden');
 
       // Auto-duck background gamelan audio volume if currently playing
@@ -3181,11 +3200,12 @@ void main() {
         this.engine = 'audio';
 
         audio.addEventListener('loadedmetadata', () => {
+          if (this.currentAudio !== audio) return;
           if (els.audioTimeTotal) els.audioTimeTotal.textContent = this.formatTime(audio.duration);
         });
 
         audio.addEventListener('timeupdate', () => {
-          if (!audio.duration) return;
+          if (this.currentAudio !== audio || !audio.duration) return;
           const pct = (audio.currentTime / audio.duration) * 100;
           if (els.audioProgressFill) els.audioProgressFill.style.width = `${pct}%`;
           if (els.audioTimeCurr) els.audioTimeCurr.textContent = this.formatTime(audio.currentTime);
@@ -3193,11 +3213,13 @@ void main() {
         });
 
         audio.addEventListener('ended', () => {
+          if (this.currentAudio !== audio) return;
           this.stop();
           showToast(`Kisah ${char.name} selesai`);
         });
 
         audio.addEventListener('error', () => {
+          if (this.currentAudio !== audio) return;
           console.warn('Audio file playback failed, falling back to browser speech synthesis...');
           this.fallbackSpeechSynthesis(char);
         });
@@ -3206,9 +3228,11 @@ void main() {
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
+              if (this.currentAudio !== audio) return;
               this.setUiState('playing', `Memutar narasi ${char.name} (Audio Asli)`);
             })
             .catch((err) => {
+              if (this.currentAudio !== audio) return;
               console.warn('Audio play promise rejected, falling back to speech synthesis:', err);
               this.fallbackSpeechSynthesis(char);
             });
@@ -3231,26 +3255,28 @@ void main() {
 
       try {
         window.speechSynthesis.cancel();
+        const profile = char.voiceProfile || {};
         const utterance = new SpeechSynthesisUtterance(char.narration);
-        utterance.lang = 'id-ID';
+        utterance.lang = profile.lang || 'id-ID';
         if (this.synthVoice) utterance.voice = this.synthVoice;
-        utterance.rate = 0.95;
-        utterance.pitch = 1.0;
+        utterance.rate = profile.rate ?? 0.95;
+        utterance.pitch = profile.pitch ?? 1.0;
 
         this.engine = 'speech';
         this.currentSpeech = utterance;
         this.speechStartTime = performance.now();
-        this.speechDurationEst = 28;
+        this.speechDurationEst = profile.durationSec || 37;
 
         if (els.audioTimeTotal) els.audioTimeTotal.textContent = this.formatTime(this.speechDurationEst);
         if (els.audioTimeCurr) els.audioTimeCurr.textContent = '0:00';
         if (els.audioProgressFill) els.audioProgressFill.style.width = '0%';
 
         utterance.onstart = () => {
+          if (this.currentSpeech !== utterance) return;
           this.setUiState('playing', `Memutar narasi ${char.name} (Suara Peramban)`);
           clearInterval(this.speechTimer);
           this.speechTimer = setInterval(() => {
-            if (this.mode !== 'playing') return;
+            if (this.mode !== 'playing' || this.currentSpeech !== utterance) return;
             const elapsed = (performance.now() - this.speechStartTime) / 1000;
             const pct = Math.min(100, (elapsed / this.speechDurationEst) * 100);
             if (els.audioProgressFill) els.audioProgressFill.style.width = `${pct}%`;
@@ -3259,12 +3285,14 @@ void main() {
         };
 
         utterance.onend = () => {
+          if (this.currentSpeech !== utterance) return;
           clearInterval(this.speechTimer);
           this.stop();
           showToast(`Kisah ${char.name} selesai`);
         };
 
         utterance.onerror = (e) => {
+          if (this.currentSpeech !== utterance) return;
           clearInterval(this.speechTimer);
           console.warn('SpeechSynthesis error:', e);
           this.setUiState('error', 'Gagal memutar narasi suara.');

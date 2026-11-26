@@ -333,7 +333,7 @@ class TokohEditorialController {
                  style="--slot-index: ${slot};">
           <div class="deck-card-frame">
             <div class="deck-card-inner">
-              <img src="${fig.image}" alt="${this.escapeHtml(fig.name)}" class="deck-card-img" width="320" height="460" loading="${isFeatured ? 'eager' : 'lazy'}" decoding="async">
+              <img src="${fig.image}" alt="${this.escapeHtml(fig.name)}" class="deck-card-img" width="320" height="460" loading="${isFeatured ? 'eager' : 'lazy'}" decoding="async" draggable="false">
               <div class="deck-card-vignette" aria-hidden="true"></div>
               
               <div class="deck-card-footer">
@@ -539,27 +539,15 @@ class TokohEditorialController {
       });
     }
 
-    // 7. Touch Swipe Support for Mobile & Tablets
-    if (this.dom.galleryDeck) {
-      let touchStartX = 0;
-      let touchStartY = 0;
-
-      this.dom.galleryDeck.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].clientX;
-        touchStartY = e.changedTouches[0].clientY;
-      }, { passive: true });
-
-      this.dom.galleryDeck.addEventListener('touchend', (e) => {
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const diffX = touchStartX - touchEndX;
-        const diffY = touchStartY - touchEndY;
-        // Only trigger if horizontal swipe is dominant and exceeds threshold
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
-          if (diffX > 0) this.nextFigure();
-          else this.prevFigure();
-        }
-      }, { passive: true });
+    // 7. Unified Gesture Navigation (Touchpad Swipe, Mouse Drag, Touchscreen Swipe)
+    const deckContainer = document.querySelector('.tokoh-gallery-panel') || this.dom.galleryDeck;
+    if (deckContainer && typeof window.attachCarouselGestures === 'function') {
+      window.attachCarouselGestures(deckContainer, {
+        onNext: () => this.nextFigure(),
+        onPrev: () => this.prevFigure(),
+        ignoreTargetSelector: 'button, a, [data-open-tokoh]',
+        shouldIgnore: () => Boolean(this.dom.modal && this.dom.modal.classList.contains('is-open'))
+      });
     }
   }
 
